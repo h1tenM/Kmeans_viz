@@ -8,7 +8,7 @@ An interactive sandbox for exploring the **K-Means clustering algorithm**. This 
 
 The project is organized to separate source code, dependencies, and build artifacts.
 
-.
+````bash
 ├── Makefile # Build instructions for the project
 ├── assets/ # Storage for data.csv and other resources
 ├── bin/ # Compiled executable output
@@ -16,7 +16,7 @@ The project is organized to separate source code, dependencies, and build artifa
 ├── include/ # Header files (raylib.h, raymath.h)
 ├── lib/ # Static libraries (libraylib.a)
 └── src/ # Source code (main.c)
-
+'''
 ---
 
 ## Implementation and Semantics
@@ -93,4 +93,4 @@ From the project root:
 
 ```bash
 make
-```
+````
