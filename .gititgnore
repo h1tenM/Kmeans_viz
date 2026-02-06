@@ -1,0 +1,11 @@
+# Binaries and Objects
+bin/
+build/
+*.o
+
+# Libraries (Keep them off GitHub if possible, users should install raylib themselves)
+# Or keep them if you want a "portable" repo
+# lib/*.a
+
+# OS generated files
+.DS_Store
