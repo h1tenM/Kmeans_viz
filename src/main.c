@@ -8,7 +8,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
-// --- Configuration ---
+// Configuration 
 #define WIDTH 800
 #define HEIGHT 600
 
@@ -24,13 +24,12 @@
 #define POINT_RADIUS 4
 #define CENTER_RADIUS 8
 
-// --- Colors & UI ---
+// Colors & UI 
 #define COLOR_BG GetColor(0x181818)
 #define COLOR_UI_BG Fade(BLACK, 0.6f)
 #define COLOR_UI_BORDER LIGHTGRAY
 #define COLOR_CENTER_GLOW GetColor(0xFFFFFF77)
 
-// --- Structs ---
 
 typedef enum {
     SOURCE_RANDOM,
@@ -57,14 +56,13 @@ typedef struct {
     size_t capacity;
 } DataPoints;
 
-// Used for "Ground Truth" generation
+// Used for ground truth generation
 typedef struct {
     Vector2 mean;
     float std;
     Color color;
 } GeneratorCluster;
 
-// The K-Means Agents
 typedef struct {
     Vector2 position;
     float radius; 
@@ -72,7 +70,7 @@ typedef struct {
     Color color; // The color associated with this K-Means center
 } KMeansCenter;
 
-// --- Globals ---
+
 DataPoints data = {0};
 int* assignments = NULL; // Dynamic array mapping point_index -> center_index
 KMeansCenter km_centers[NUM_KMEANS_CENTERS];
@@ -81,7 +79,7 @@ GeneratorCluster gen_clusters[NUM_GENERATED_CLUSTERS];
 int iteration_count = 0;
 DataSource current_source = SOURCE_RANDOM;
 
-// Standard Palette
+// Standard Palette (add more if NUM_GENERATED_CLUSTERS) 
 Color palette[] = {RED, BLUE, GREEN, YELLOW, PURPLE, ORANGE, PINK, LIME};
 
 // --- Function Prototypes ---
@@ -100,7 +98,6 @@ void draw_points();
 void draw_centers();
 void draw_ui_panel();
 
-// --- Main ---
 
 int main(void) {
     srand((unsigned int)time(NULL));
@@ -116,7 +113,7 @@ int main(void) {
     // load_from_csv("data.csv"); 
 
     while (!WindowShouldClose()) {
-        // --- Input ---
+
         if (IsKeyPressed(KEY_R)) {
             if (current_source == SOURCE_RANDOM) init_random_data();
             else reset_kmeans(); // Keep CSV data, just reset centers
@@ -131,7 +128,6 @@ int main(void) {
             step_kmeans();
         }
 
-        // --- Draw ---
         BeginDrawing();
             ClearBackground(COLOR_BG);
 
@@ -161,7 +157,7 @@ void init_random_data() {
         data.items = (Point*)malloc(sizeof(Point) * data.capacity);
     }
 
-    // Generate Ground Truth Clusters
+    // Generate ground truth clusters
     for (int i = 0; i < NUM_GENERATED_CLUSTERS; ++i) {
         gen_clusters[i].mean = (Vector2){
             rand_float(MIN_X * 0.8f, MAX_X * 0.8f),
@@ -170,7 +166,7 @@ void init_random_data() {
         gen_clusters[i].std = rand_float(5, 15);
         gen_clusters[i].color = palette[i % 8];
 
-        // Generate Points
+        // Generate points
         for (int j = 0; j < SAMPLE_PER_CLUSTER; ++j) {
             data.items[data.count].position = generate_gaussian_point(gen_clusters[i].mean, gen_clusters[i].std);
             data.items[data.count].ground_truth_id = i; // SAVE THE TRUTH
@@ -240,7 +236,7 @@ void reset_kmeans() {
     for(size_t i=0; i<data.count; i++) assignments[i] = -1;
 }
 
-void step_kmeans() {
+void step_kmeans() { // Kmeans reminds of Expectation Maximization algorithms
     // 1. Assign
     for (size_t i = 0; i < data.count; ++i) {
         float min_dist_sq = FLT_MAX;
@@ -283,25 +279,25 @@ void step_kmeans() {
     iteration_count++;
 }
 
-// --- Rendering ---
+// Rendering 
 
 void draw_points() {
     for (size_t i = 0; i < data.count; ++i) {
         Vector2 screen_pos = project_to_screen(data.items[i].position);
-        int k = assignments[i]; // The "Belief" index
-        int truth = data.items[i].ground_truth_id; // The "Truth" index
+        int k = assignments[i]; // The Belief index
+        int truth = data.items[i].ground_truth_id; // The Truth index
         
         Color render_color;
         KShape render_shape;
 
-        // --- VISUAL PHILOSOPHY ---
+        // VISUAL PHILOSOPHY 
         if (current_source == SOURCE_RANDOM) {
             // Truth = Color (from generation), Belief = Shape (from K-means)
             render_color = (truth >= 0) ? palette[truth % 8] : DARKGRAY;
             render_shape = (k >= 0) ? km_centers[k].shape : SHAPE_CIRCLE;
         } else {
-            // CSV Mode: No truth known.
-            // Belief = Color AND Shape (standard visualization)
+            // CSV Mode: no truth known.
+            // Belief = Color AND shape (standard visualization)
             render_color = (k >= 0) ? km_centers[k].color : DARKGRAY;
             render_shape = (k >= 0) ? km_centers[k].shape : SHAPE_CIRCLE;
         }
@@ -313,6 +309,7 @@ void draw_points() {
         }
 
         // Draw based on calculated Shape and Color
+        // Standard shapes (add more if modified NUM_KMEANS_CENTERS)
         switch (render_shape) {
             case SHAPE_CIRCLE: DrawCircleV(screen_pos, POINT_RADIUS, render_color); break;
             case SHAPE_SQUARE: DrawRectangleV(Vector2Subtract(screen_pos, (Vector2){3,3}), (Vector2){6,6}, render_color); break;
@@ -332,12 +329,12 @@ void draw_centers() {
     for (int k = 0; k < NUM_KMEANS_CENTERS; ++k) {
         Vector2 pos = project_to_screen(km_centers[k].position);
         
-        // Draw Range
+        // Draw range
         Vector2 edge = project_to_screen(Vector2Add(km_centers[k].position, (Vector2){km_centers[k].radius, 0}));
         float screen_r = fabsf(edge.x - pos.x);
         DrawCircleLines((int)pos.x, (int)pos.y, screen_r, COLOR_CENTER_GLOW);
 
-        // Center Marker
+        // Center marker
         DrawCircleV(pos, CENTER_RADIUS + 2, BLACK);
         DrawCircleV(pos, CENTER_RADIUS, WHITE);
         
@@ -379,7 +376,7 @@ void draw_ui_panel() {
     DrawText(subtext, x + padding, y + padding * 3 + fontSize, 10, LIGHTGRAY);
 }
 
-// --- Math Helpers ---
+// Math Helpers
 
 Vector2 project_to_screen(Vector2 v) {
     float lx = MAX_X - MIN_X;
